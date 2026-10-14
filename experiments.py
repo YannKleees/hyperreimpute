@@ -155,15 +155,31 @@ def density_example(seed=0):
     return truth.columns[column], values
 
 
-def table2(main):
-    paper = pd.DataFrame(cfg.PAPER_TABLE2, columns=["dataset", "method", "paper", "paper_std"])
-    ours = 10 * main.groupby(["dataset", "method"]).rmse.agg(ours="mean", ours_std="std")
-    table = paper.merge(ours.reset_index())
+def paper_comparison(results):
+    """Our RMSE and WD (x 10) next to Tables 2 and 7 of the paper, z = (ours - paper) / paper_std."""
+    columns = ["dataset", "paper_method", "paper", "paper_std"]
+    paper = pd.concat([
+        pd.DataFrame(cfg.PAPER_TABLE2, columns=columns).assign(metric="rmse"),
+        pd.DataFrame(cfg.PAPER_TABLE7, columns=columns).assign(metric="wasserstein"),
+    ])
+    long = results.melt(["dataset", "method"], ["rmse", "wasserstein"], "metric")
+    ours = 10 * long.groupby(["dataset", "method", "metric"]).value.agg(ours="mean", ours_std="std")
+    ours = ours.reset_index()
+    ours["paper_method"] = ours.method.replace(cfg.PAPER_NAMES)
+    table = paper.merge(ours)
     table["diff_%"] = 100 * (table.ours / table.paper - 1)
-    return table
+    table["z"] = (table.ours - table.paper) / table.paper_std
+    order = ["metric", "dataset", "method", "paper_method", "paper", "paper_std", "ours", "ours_std", "diff_%", "z"]
+    return table[order]
+
+
+def table2(results):
+    return paper_comparison(results).query("metric == 'rmse'").drop(columns="metric").reset_index(drop=True)
 
 
 if __name__ == "__main__":
-    table2(main_experiment()).round(3).to_csv(cfg.RESULTS / "table2_comparison.csv", index=False)
+    results = main_experiment()
+    table2(results).round(3).to_csv(cfg.RESULTS / "table2_comparison.csv", index=False)
+    paper_comparison(results).round(3).to_csv(cfg.RESULTS / "paper_comparison.csv", index=False)
     mechanism_experiment()
     feature_experiment()

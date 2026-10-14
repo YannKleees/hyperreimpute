@@ -1,0 +1,16 @@
+dataset,method,paper_method,paper,paper_std,ours,ours_std,diff_%,z
+airfoil,ice_lr,ice_lr,2.349,0.483,1.948,0.496,-17.087,-0.831
+airfoil,ice_rf,ice_rf,2.365,0.533,1.906,0.571,-19.407,-0.861
+airfoil,ice_cb,ice_cb,2.078,0.482,2.553,0.374,22.844,0.985
+airfoil,hyperimpute_naive,column_naive,1.861,0.446,1.362,0.39,-26.814,-1.119
+airfoil,hyperimpute,hyperimpute,1.479,0.294,1.799,0.532,21.618,1.088
+compression,ice_lr,ice_lr,1.429,0.215,1.491,0.163,4.334,0.288
+compression,ice_rf,ice_rf,1.615,0.141,1.684,0.095,4.288,0.491
+compression,ice_cb,ice_cb,1.251,0.204,2.288,0.159,82.881,5.083
+compression,hyperimpute_naive,column_naive,1.094,0.167,1.153,0.125,5.436,0.356
+compression,hyperimpute,hyperimpute,1.013,0.145,1.477,0.149,45.799,3.2
+wine_white,ice_lr,ice_lr,0.919,0.06,0.864,0.114,-5.984,-0.917
+wine_white,ice_rf,ice_rf,0.987,0.034,0.904,0.125,-8.402,-2.439
+wine_white,ice_cb,ice_cb,0.877,0.054,1.097,0.19,25.063,4.07
+wine_white,hyperimpute_naive,column_naive,0.845,0.081,0.793,0.092,-6.18,-0.645
+wine_white,hyperimpute,hyperimpute,0.801,0.053,0.793,0.095,-1.028,-0.155
