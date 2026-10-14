@@ -2,11 +2,13 @@ from hyperimpute.utils.benchmarks import *  # first, so the imports below win (i
 import time
 import warnings
 from functools import cache
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from packaging.version import Version
 from tqdm.auto import tqdm
+from hyperimpute.plugins.prediction import classifiers, regression
 import config as cfg
 warnings.filterwarnings("ignore")  # hyperimpute floods the output with warnings
 assert Version(pd.__version__) < Version("2.3"), "with pandas>=2.3 every imputer becomes mean imputation"
@@ -47,6 +49,13 @@ METHODS = {
 for name in ["sklearn_ice", "sklearn_missforest", "mean", "softimpute", "gain", "miwae"]:
     METHODS[name] = imputer(name)
 
+# CatBoost with 1000 trees and learning rate 0.03. hyperimpute finds plugins by file path,
+# so we add ours to its lists. Kept out of METHODS, whose order defines the jobs cached in main.csv.
+PLUGINS = Path(__file__).parent / "plugins"
+regression.plugins.append(str(PLUGINS / "plugin_catboost_regressor_fixed.py"))
+classifiers.plugins.append(str(PLUGINS / "plugin_catboost_fixed.py"))
+EXTRA_METHODS = {"ice_cb_fixed": ice("catboost_regressor_fixed", "catboost_fixed")}
+
 
 def make_missing(dataset, seed, mechanism=cfg.MECHANISM, columns=None):
     """This function returns the scaled true data, a copy with missing cells and the mask of those cells"""
@@ -61,7 +70,7 @@ def make_missing(dataset, seed, mechanism=cfg.MECHANISM, columns=None):
 
 
 def impute(method, seed, with_missing):
-    return METHODS[method](seed).fit_transform(with_missing).to_numpy()
+    return (METHODS | EXTRA_METHODS)[method](seed).fit_transform(with_missing).to_numpy()
 
 
 def variance_ratio(imputed, truth, mask):
@@ -130,6 +139,15 @@ def mechanism_experiment():
     return run_cached("mechanisms", jobs)
 
 
+def cb_fixed_experiment(n_seeds=len(cfg.SEEDS)):
+    """ICE with CatBoost at sensible settings. Seeds are the outer loop, so running fewer seeds keeps job numbers."""
+    jobs = []
+    for seed in cfg.SEEDS[:n_seeds]:
+        for dataset in cfg.DATASETS:
+            jobs.append(delayed(evaluate)(dataset, seed, ["ice_cb_fixed"]))
+    return run_cached("ice_cb_fixed", jobs)
+
+
 def random_columns(dataset, k, seed):
     all_columns = load(dataset).columns
     return list(np.random.RandomState(100 + seed).choice(all_columns, k, replace=False))
@@ -178,7 +196,7 @@ def table2(results):
 
 
 if __name__ == "__main__":
-    results = main_experiment()
+    results = pd.concat([main_experiment(), cb_fixed_experiment()])
     table2(results).round(3).to_csv(cfg.RESULTS / "table2_comparison.csv", index=False)
     paper_comparison(results).round(3).to_csv(cfg.RESULTS / "paper_comparison.csv", index=False)
     mechanism_experiment()

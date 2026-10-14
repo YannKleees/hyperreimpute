@@ -65,4 +65,4 @@ PAPER_TABLE7 = [
 # our method -> paper row it is compared with.
 # hyperimpute_naive also keeps per iteration selection on (select_model_by_iteration=True),
 # so it is column_naive plus adaptivity.
-PAPER_NAMES = {"hyperimpute_naive": "column_naive"}
+PAPER_NAMES = {"hyperimpute_naive": "column_naive", "ice_cb_fixed": "ice_cb"}
