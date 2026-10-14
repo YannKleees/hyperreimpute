@@ -1,5 +1,6 @@
 hyperimpute==0.1.17
 pandas<2.3
+packaging
 xlrd
 joblib
 tqdm

@@ -5,10 +5,11 @@ from functools import cache
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
+from packaging.version import Version
 from tqdm.auto import tqdm
 import config as cfg
 warnings.filterwarnings("ignore")  # hyperimpute floods the output with warnings
-assert pd.__version__ < "2.3", "with pandas>=2.3 every imputer becomes mean imputation"
+assert Version(pd.__version__) < Version("2.3"), "with pandas>=2.3 every imputer becomes mean imputation"
 
 
 @cache
