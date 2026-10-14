@@ -13,7 +13,7 @@ assert pd.__version__ < "2.3", "with pandas>=2.3 every imputer becomes mean impu
 
 @cache
 def load(dataset):
-    """Download a UCI dataset. The target column is kept, as in the authors notebooks"""
+    """Download a UCI dataset."""
     url = cfg.URLS[dataset]
     if url.endswith(".xls"):
         return pd.read_excel(url)
@@ -25,7 +25,7 @@ def imputer(name="hyperimpute", **settings):
 
 
 def ice(regressor, classifier):
-    """HyperImpute with one fixed learner for all columns, as in the authors' notebook."""
+    """HyperImpute with one fixed learner for all columns"""
     return imputer(
         regression_seed=[regressor],
         classifier_seed=[classifier],
@@ -48,7 +48,7 @@ for name in ["sklearn_ice", "sklearn_missforest", "mean", "softimpute", "gain", 
 
 
 def make_missing(dataset, seed, mechanism=cfg.MECHANISM, columns=None):
-    """Return the scaled true data, a copy with missing cells, and the mask of those cells."""
+    """This function returns the scaled true data, a copy with missing cells and the mask of those cells"""
     enable_reproducible_results(seed)
     data = load(dataset)
     if columns is not None:
@@ -114,7 +114,7 @@ def main_experiment():
     jobs = []
     for dataset in cfg.DATASETS:
         for seed in cfg.SEEDS:
-            for method in METHODS:  # one job per method, so the progress bar moves often
+            for method in METHODS:
                 jobs.append(delayed(evaluate)(dataset, seed, [method]))
     return run_cached("main", jobs)
 
