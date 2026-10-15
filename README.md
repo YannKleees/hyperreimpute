@@ -1,4 +1,4 @@
-# HyperImpute: Reproduction and Limitation Tests
+# HyperImpute
 
 This project reproduces Table 2 of the HyperImpute paper (Jarrett et al., 2022) on three UCI datasets and adds five tests of the method's limitations.
 
