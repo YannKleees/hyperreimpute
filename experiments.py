@@ -49,11 +49,15 @@ METHODS = {
 for name in ["sklearn_ice", "sklearn_missforest", "mean", "softimpute", "gain", "miwae"]:
     METHODS[name] = imputer(name)
 
-# CatBoost with 1000 trees and learning rate 0.03. hyperimpute finds plugins by file path,
-# so we add ours to its lists. Kept out of METHODS, whose order defines the jobs cached in main.csv.
-PLUGINS = Path(__file__).parent / "plugins"
-regression.plugins.append(str(PLUGINS / "plugin_catboost_regressor_fixed.py"))
-classifiers.plugins.append(str(PLUGINS / "plugin_catboost_fixed.py"))
+# CatBoost with 1000 trees and learning rate 0.03, to check whether ice_cb is weak only because of
+# the hyperimpute defaults. hyperimpute only knows the learners in its lists of file paths
+# (`regression.plugins`, `classifiers.plugins`), so we append ours there. Each file name must
+# match the learner's name(), because hyperimpute looks learners up by file name.
+LEARNERS = Path(__file__).parent / "learners"
+regression.plugins.append(str(LEARNERS / "catboost_regressor_fixed.py"))
+classifiers.plugins.append(str(LEARNERS / "catboost_fixed.py"))
+# Kept out of METHODS, because the order of METHODS defines the job numbers cached in main.csv,
+# and a new entry there would shift them and force a rerun.
 EXTRA_METHODS = {"ice_cb_fixed": ice("catboost_regressor_fixed", "catboost_fixed")}
 
 

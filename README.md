@@ -29,7 +29,7 @@ RMSE × 10 on the masked cells, MAR with 30% missingness, mean over 10 seeds. Lo
 ├── reproduction.ipynb     runs every experiment and shows all tables and figures
 ├── experiments.py         imputation methods, experiments and paper comparison
 ├── config.py              datasets, seeds, missingness settings and paper reference values
-├── plugins/               CatBoost learners with sensible settings, used by ice_cb_fixed
+├── learners/              CatBoost learners with sensible settings, used by ice_cb_fixed
 ├── results/               cached results, one CSV per experiment
 ├── docs/                  report and paper
 └── requirements.txt
