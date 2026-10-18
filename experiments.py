@@ -41,6 +41,7 @@ def ice(regressor, classifier):
 
 METHODS = {
     "hyperimpute": imputer(optimizer="hyperband", select_lazy=False),
+    # column_naive plus adaptivity: it may still switch models between iterations
     "hyperimpute_naive": imputer(optimizer="simple"),
     "ice_lr": ice("linear_regression", "logistic_regression"),
     "ice_rf": ice("random_forest_regressor", "random_forest"),
@@ -59,6 +60,40 @@ classifiers.plugins.append(str(LEARNERS / "catboost_fixed.py"))
 # Kept out of METHODS, because the order of METHODS defines the job numbers cached in main.csv,
 # and a new entry there would shift them and force a rerun.
 EXTRA_METHODS = {"ice_cb_fixed": ice("catboost_regressor_fixed", "catboost_fixed")}
+
+# Ablation rows with the settings of the authors' experiments_04_gain_of_function.ipynb.
+# column_naive_paper follows Table 3: one model per column, chosen once with default settings.
+EXTRA_METHODS |= {
+    "column_naive_paper": imputer(
+        optimizer="simple", select_model_by_column=True, select_model_by_iteration=False, select_lazy=True
+    ),
+    "global_search": imputer(
+        optimizer="hyperband", select_model_by_column=False, select_model_by_iteration=False, select_lazy=True
+    ),
+    "wo_adaptivity": imputer(
+        optimizer="hyperband", select_model_by_column=True, select_model_by_iteration=False, select_lazy=True
+    ),
+    # the authors' seeds_only_cb, which also selects globally and once, unlike Table 3's description
+    "wo_flexibility_cb": imputer(
+        optimizer="hyperband",
+        regression_seed=["catboost_regressor"],
+        classifier_seed=["catboost"],
+        select_model_by_column=False,
+        select_model_by_iteration=False,
+        select_lazy=True,
+    ),
+}
+
+# column_naive_paper with the fixed CatBoost in its pool, so that ice_cb_fixed is compared with a
+# column_naive that has the same CatBoost available
+EXTRA_METHODS["column_naive_cb_fixed"] = imputer(
+    optimizer="simple",
+    regression_seed=["random_forest_regressor", "linear_regression", "xgboost_regressor", "catboost_regressor_fixed"],
+    classifier_seed=["random_forest", "logistic_regression", "xgboost", "catboost_fixed"],
+    select_model_by_column=True,
+    select_model_by_iteration=False,
+    select_lazy=True,
+)
 
 
 def make_missing(dataset, seed, mechanism=cfg.MECHANISM, columns=None):
@@ -150,6 +185,25 @@ def cb_fixed_experiment(n_seeds=len(cfg.SEEDS)):
         for dataset in cfg.DATASETS:
             jobs.append(delayed(evaluate)(dataset, seed, ["ice_cb_fixed"]))
     return run_cached("ice_cb_fixed", jobs)
+
+
+def ablation_experiment(n_seeds=len(cfg.SEEDS)):
+    """The remaining Table 2 rows. Seeds are the outer loop, so a partial run covers every dataset and method."""
+    jobs = []
+    for seed in cfg.SEEDS[:n_seeds]:
+        for dataset in cfg.DATASETS:
+            for method in cfg.ABLATION:
+                jobs.append(delayed(evaluate)(dataset, seed, [method]))
+    return run_cached("ablation_extra", jobs)
+
+
+def cb_pool_experiment(n_seeds=len(cfg.SEEDS)):
+    """column_naive with the fixed CatBoost in its pool, the fair comparison for ice_cb_fixed."""
+    jobs = []
+    for seed in cfg.SEEDS[:n_seeds]:
+        for dataset in cfg.DATASETS:
+            jobs.append(delayed(evaluate)(dataset, seed, ["column_naive_cb_fixed"]))
+    return run_cached("column_naive_cb_fixed", jobs)
 
 
 def random_columns(dataset, k, seed):

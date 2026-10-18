@@ -22,6 +22,9 @@ MECHANISMS = ["MCAR", "MAR", "MNAR"]
 FEATURE_COUNTS = [2, 3, 4, 6, 8, 12]
 COMPARED = ["sklearn_ice", "sklearn_missforest", "hyperimpute_naive"]
 
+# the remaining Table 2 rows of the paper, plus column_naive as Table 3 defines it
+ABLATION = ["column_naive_paper", "global_search", "wo_adaptivity", "wo_flexibility_cb"]
+
 N_JOBS = 2
 
 # Table 2 of the paper: RMSE x 10, MAR 30%, mean and std over 10 seeds
@@ -41,6 +44,15 @@ PAPER_TABLE2 = [
     ("wine_white", "ice_cb", 0.877, 0.054),
     ("wine_white", "column_naive", 0.845, 0.081),
     ("wine_white", "hyperimpute", 0.801, 0.053),
+    ("airfoil", "global_search", 1.599, 0.322),
+    ("airfoil", "wo_flexibility_cb", 1.594, 0.367),
+    ("airfoil", "wo_adaptivity", 1.665, 0.360),
+    ("compression", "global_search", 1.031, 0.175),
+    ("compression", "wo_flexibility_cb", 1.082, 0.157),
+    ("compression", "wo_adaptivity", 1.047, 0.176),
+    ("wine_white", "global_search", 0.853, 0.049),
+    ("wine_white", "wo_flexibility_cb", 0.876, 0.050),
+    ("wine_white", "wo_adaptivity", 0.890, 0.074),
 ]
 
 # Table 7 of the paper: Wasserstein distance x 10, MAR 30%, mean and std over 10 seeds
@@ -65,4 +77,9 @@ PAPER_TABLE7 = [
 # our method -> paper row it is compared with.
 # hyperimpute_naive also keeps per iteration selection on (select_model_by_iteration=True),
 # so it is column_naive plus adaptivity.
-PAPER_NAMES = {"hyperimpute_naive": "column_naive", "ice_cb_fixed": "ice_cb"}
+PAPER_NAMES = {
+    "hyperimpute_naive": "column_naive",
+    "column_naive_paper": "column_naive",
+    "column_naive_cb_fixed": "column_naive",
+    "ice_cb_fixed": "ice_cb",
+}
