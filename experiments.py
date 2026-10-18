@@ -218,7 +218,9 @@ def selections(method, seed, with_missing):
         # With select_lazy a column may instead copy the model of an earlier column with the same learner,
         # and then its own optimizer was never asked, so its record does not describe the model.
         candidate = model.model.column_to_optimizer[column].candidate
-        params = str(candidate["params"]) if candidate["name"] == learner.name() else "copied from another column"
+        # .item() turns numpy numbers into plain ones, so that every numpy version writes the same text
+        chosen = {key: getattr(value, "item", lambda: value)() for key, value in candidate["params"].items()}
+        params = str(chosen) if candidate["name"] == learner.name() else "copied from another column"
         rows.append({"method": method, "column": column, "learner": learner.name(), "params": params})
     return pd.DataFrame(rows)
 
