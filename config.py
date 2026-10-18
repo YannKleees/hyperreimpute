@@ -25,6 +25,15 @@ COMPARED = ["sklearn_ice", "sklearn_missforest", "hyperimpute_naive"]
 # the remaining Table 2 rows of the paper, plus column_naive as Table 3 defines it
 ABLATION = ["column_naive_paper", "global_search", "wo_adaptivity", "wo_flexibility_cb"]
 
+# paired per seed tests: (method, baselines), where the best baseline per dataset is used
+PAIRED = [
+    ("column_naive_paper", ["ice_lr", "ice_rf"]),
+    ("ice_cb_fixed", ["column_naive_paper"]),
+    ("ice_cb_fixed", ["hyperimpute"]),
+    ("hyperimpute", ["column_naive_paper"]),
+    ("ice_cb_fixed", ["column_naive_cb_fixed"]),
+]
+
 N_JOBS = 2
 
 # Table 2 of the paper: RMSE x 10, MAR 30%, mean and std over 10 seeds

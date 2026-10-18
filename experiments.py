@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from packaging.version import Version
+from scipy import stats
 from tqdm.auto import tqdm
 from hyperimpute.plugins.prediction import classifiers, regression
 import config as cfg
@@ -248,7 +249,11 @@ def density_example(seed=0):
 
 
 def paper_comparison(results):
-    """Our RMSE and WD (x 10) next to Tables 2 and 7 of the paper, z = (ours - paper) / paper_std."""
+    """Our RMSE and WD (x 10) next to Tables 2 and 7 of the paper.
+
+    z = (ours - paper) / paper_std compares with the spread of single runs, z_se = (ours - paper) / paper_se
+    with the uncertainty of the paper's mean over 10 seeds, paper_se = paper_std / sqrt(10).
+    """
     columns = ["dataset", "paper_method", "paper", "paper_std"]
     paper = pd.concat([
         pd.DataFrame(cfg.PAPER_TABLE2, columns=columns).assign(metric="rmse"),
@@ -261,12 +266,44 @@ def paper_comparison(results):
     table = paper.merge(ours)
     table["diff_%"] = 100 * (table.ours / table.paper - 1)
     table["z"] = (table.ours - table.paper) / table.paper_std
-    order = ["metric", "dataset", "method", "paper_method", "paper", "paper_std", "ours", "ours_std", "diff_%", "z"]
+    table["paper_se"] = table.paper_std / np.sqrt(len(cfg.SEEDS))
+    table["z_se"] = (table.ours - table.paper) / table.paper_se
+    order = ["metric", "dataset", "method", "paper_method", "paper", "paper_std", "paper_se", "ours", "ours_std",
+             "diff_%", "z", "z_se"]
     return table[order]
 
 
 def table2(results):
     return paper_comparison(results).query("metric == 'rmse'").drop(columns="metric").reset_index(drop=True)
+
+
+def paired_test(results, method, baselines):
+    """RMSE (x 10) of method minus baseline per seed, on the same masks, for each dataset.
+
+    The baseline is the one of `baselines` with the lowest mean RMSE on that dataset. Returns the mean
+    difference, a 95% t interval and the Wilcoxon signed rank p value (with 10 seeds at least 0.002).
+    """
+    rmse = 10 * results.pivot_table("rmse", ["dataset", "seed"], "method")
+    rows = []
+    for dataset in cfg.DATASETS:
+        baseline = rmse.loc[dataset][baselines].mean().idxmin()
+        diff = (rmse.loc[dataset][method] - rmse.loc[dataset][baseline]).dropna()
+        half = stats.t.ppf(0.975, len(diff) - 1) * diff.std() / np.sqrt(len(diff))
+        rows.append({
+            "dataset": dataset,
+            "method": method,
+            "baseline": baseline,
+            "seeds": len(diff),
+            "mean_diff": diff.mean(),
+            "ci_low": diff.mean() - half,
+            "ci_high": diff.mean() + half,
+            "p_wilcoxon": stats.wilcoxon(diff).pvalue,
+        })
+    return pd.DataFrame(rows)
+
+
+def paired_tests(results):
+    return pd.concat([paired_test(results, method, baselines) for method, baselines in cfg.PAIRED], ignore_index=True)
 
 
 if __name__ == "__main__":
@@ -275,3 +312,6 @@ if __name__ == "__main__":
     paper_comparison(results).round(3).to_csv(cfg.RESULTS / "paper_comparison.csv", index=False)
     mechanism_experiment()
     feature_experiment()
+    extended = pd.concat([results, ablation_experiment(), cb_pool_experiment()])
+    table2(extended).round(3).to_csv(cfg.RESULTS / "table2_extended.csv", index=False)
+    paired_tests(extended).round(4).to_csv(cfg.RESULTS / "paired_tests.csv", index=False)
