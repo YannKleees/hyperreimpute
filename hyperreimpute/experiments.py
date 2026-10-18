@@ -10,7 +10,7 @@ from packaging.version import Version
 from scipy import stats
 from tqdm.auto import tqdm
 from hyperimpute.plugins.prediction import classifiers, regression
-import config as cfg
+from . import config as cfg
 warnings.filterwarnings("ignore")  # hyperimpute floods the output with warnings
 assert Version(pd.__version__) < Version("2.3"), "with pandas>=2.3 every imputer becomes mean imputation"
 

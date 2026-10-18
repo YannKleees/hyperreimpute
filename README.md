@@ -4,20 +4,27 @@ This project reproduces Table 2 of the HyperImpute paper (Jarrett et al., ICML 2
 
 ## Where to look
 
-- [`docs/Report.pdf`](docs/Report.pdf): the report with the results and findings
-- [`reproduction.ipynb`](reproduction.ipynb): runs every experiment and shows all tables and figures
-- [`docs/HyperImpute.pdf`](docs/HyperImpute.pdf): the original paper
-- `experiments.py` and `config.py`: the code and settings behind the notebook
-- `version_check.py`: reruns hyperimpute, column_naive_paper and ice_cb under hyperimpute 0.1.5
-- `learners/`: CatBoost with 1000 trees and a learning rate of 0.03, used by `ice_cb_fixed`
-- `results/`: the cached results, one CSV per experiment
-  - `main.csv`, `ice_cb_fixed.csv`: Table 2 methods and the fixed CatBoost
-  - `ablation_extra.csv`: column_naive_paper and the paper's other Table 2 rows
-  - `column_naive_cb_fixed.csv`: column_naive with the fixed CatBoost in its pool
-  - `version_015.csv`: the same methods and masks under hyperimpute 0.1.5
-  - `selections.csv`: learners and hyperparameters chosen per column, airfoil seed 0
-  - `masks/`: the masks of the version check, saved under 0.1.17
-  - `mechanisms.csv`, `features.csv`: the limitation tests
+```text
+├── reproduction.ipynb            runs every experiment and shows all tables and figures
+├── docs/
+│   ├── Report.pdf                the report with the results and findings
+│   └── HyperImpute.pdf           the original paper
+├── hyperreimpute/                the code behind the notebook
+│   ├── config.py                 datasets, seeds, methods compared and paper reference values
+│   ├── experiments.py            imputation methods, experiments, paper comparison and paired tests
+│   ├── version_check.py          reruns hyperimpute, column_naive_paper and ice_cb under hyperimpute 0.1.5
+│   └── learners/                 CatBoost with 1000 trees and a learning rate of 0.03, used by ice_cb_fixed
+└── results/                      the cached results, one CSV per experiment
+    ├── main.csv                  the Table 2 methods
+    ├── ice_cb_fixed.csv          ICE with the fixed CatBoost
+    ├── ablation_extra.csv        column_naive_paper and the paper's other Table 2 rows
+    ├── column_naive_cb_fixed.csv column_naive with the fixed CatBoost in its pool
+    ├── version_015.csv           the same methods and masks under hyperimpute 0.1.5
+    ├── selections.csv            learners and hyperparameters chosen per column, airfoil seed 0
+    ├── masks/                    the masks of the version check, saved under 0.1.17
+    ├── mechanisms.csv            limitation test: MCAR, MAR and MNAR
+    └── features.csv              limitation test: few features
+```
 
 ## Running
 
@@ -29,7 +36,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-Then open `reproduction.ipynb` with this environment and run all cells. The results are cached in `results/`, so this takes about a minute. To rerun an experiment, delete its CSV. A full rerun takes several hours. Without the notebook, `python experiments.py` runs all experiments.
+Then open `reproduction.ipynb` with this environment and run all cells. The results are cached in `results/`, so this takes about a minute. To rerun an experiment, delete its CSV. A full rerun takes several hours. Without the notebook, `python -m hyperreimpute.experiments` runs all experiments.
 
 ### Version check with hyperimpute 0.1.5
 
@@ -44,7 +51,7 @@ pip install numpy==1.23.5 pandas==1.5.3 scikit-learn==1.1.3 scipy==1.9.3 xgboost
 pip install --no-deps hyperimpute==0.1.5
 ```
 
-Run `python version_check.py` once in the main environment (saves the masks and the 0.1.17 selections) and then once in `venv_015` (writes `version_015.csv` and the 0.1.5 selections).
+Run `python -m hyperreimpute.version_check` from this folder once in the main environment (saves the masks and the 0.1.17 selections) and then once in `venv_015` (writes `version_015.csv` and the 0.1.5 selections).
 
 ## Notes
 

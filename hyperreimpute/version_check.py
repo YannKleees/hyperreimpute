@@ -1,14 +1,14 @@
 """Rerun hyperimpute, column_naive_paper and ice_cb under hyperimpute 0.1.5, on the masks of 0.1.17.
 
-Run it once in the main environment (saves the masks and the 0.1.17 selections),
-then once in venv_015 (writes results/version_015.csv and the 0.1.5 selections). See README.
+Run `python -m hyperreimpute.version_check` once in the main environment (saves the masks and the 0.1.17
+selections), then once in venv_015 (writes results/version_015.csv and the 0.1.5 selections). See README.
 """
 from importlib.metadata import version
 import numpy as np
 import pandas as pd
 from joblib import delayed
-import config as cfg
-import experiments as ex
+from . import config as cfg
+from . import experiments as ex
 
 VERSION = version("hyperimpute")
 DATASETS = ["airfoil", "compression"]

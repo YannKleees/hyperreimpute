@@ -1,6 +1,7 @@
 from pathlib import Path
 
-RESULTS = Path("results")
+# next to this folder, so that the notebook and the scripts find the cache from any working directory
+RESULTS = Path(__file__).parent.parent / "results"
 
 UCI = "https://archive.ics.uci.edu/ml/machine-learning-databases"
 URLS = {
