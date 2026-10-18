@@ -122,8 +122,9 @@ def variance_ratio(imputed, truth, mask):
     return np.mean(ratios)
 
 
-def evaluate(dataset, seed, methods, mechanism=cfg.MECHANISM, columns=None):
-    truth, with_missing, mask = make_missing(dataset, seed, mechanism, columns)
+def evaluate(dataset, seed, methods, mechanism=cfg.MECHANISM, columns=None, missing=None):
+    """missing: (truth, with_missing, mask) saved earlier, so that another hyperimpute version sees the same masks"""
+    truth, with_missing, mask = make_missing(dataset, seed, mechanism, columns) if missing is None else missing
     rows = []
     for method in methods:
         start = time.time()
@@ -204,6 +205,21 @@ def cb_pool_experiment(n_seeds=len(cfg.SEEDS)):
         for dataset in cfg.DATASETS:
             jobs.append(delayed(evaluate)(dataset, seed, ["column_naive_cb_fixed"]))
     return run_cached("column_naive_cb_fixed", jobs)
+
+
+def selections(method, seed, with_missing):
+    """Learner and hyperparameters that each column uses in the final iteration."""
+    model = (METHODS | EXTRA_METHODS)[method](seed)
+    model.fit_transform(with_missing)
+    rows = []
+    for column, learner in model.models().items():
+        # each column's optimizer keeps the learner and hyperparameters it chose last ({} = defaults).
+        # With select_lazy a column may instead copy the model of an earlier column with the same learner,
+        # and then its own optimizer was never asked, so its record does not describe the model.
+        candidate = model.model.column_to_optimizer[column].candidate
+        params = str(candidate["params"]) if candidate["name"] == learner.name() else "copied from another column"
+        rows.append({"method": method, "column": column, "learner": learner.name(), "params": params})
+    return pd.DataFrame(rows)
 
 
 def random_columns(dataset, k, seed):
